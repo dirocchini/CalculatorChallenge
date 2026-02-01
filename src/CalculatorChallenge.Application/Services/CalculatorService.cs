@@ -13,13 +13,7 @@ public sealed class CalculatorService : ICalculatorService
 
         var values = expression.Split(',', StringSplitOptions.RemoveEmptyEntries);
                                
-        if (values.Length > 2)
-            throw new TooManyNumbersException(2);
-
-        var a = ParseInt(values.ElementAtOrDefault(0));
-        var b = ParseInt(values.ElementAtOrDefault(1));
-
-        return a + b;
+        return values.Select(ParseInt).Sum();
     }
     private static int ParseInt(string? value) => int.TryParse(value, out var result) ? result : 0;
 }

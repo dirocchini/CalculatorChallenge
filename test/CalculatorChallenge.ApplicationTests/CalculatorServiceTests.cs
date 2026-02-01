@@ -1,9 +1,6 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
 using CalculatorChallenge.Application.Services;
 using CalculatorChallenge.Domain.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CalculatorChallenge.ApplicationTests;
 
@@ -23,13 +20,13 @@ public class CalculatorServiceTests
     [InlineData("7,", 7)]
     public void WhenMissingOrInvalidValues_ShouldConvertToZero(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input));
 
-    [Fact]
-    public void WhenMoreThanTwoNumbersProvided_ShouldThrowException()
-       => Assert.Throws<TooManyNumbersException>(() => _calculatorService.Calculate("1,2,3"));
-
     [Theory]
     [InlineData("20", 20)]
     [InlineData("1,5000", 5001)]
     [InlineData("4,-3", 1)]
     public void WhenNoErrors_ShouldCalculate(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input));
+
+    [Fact]
+    public void WhenManyNumbers_ShouldCalculate()
+       => Assert.Equal(78, _calculatorService.Calculate("1,2,3,4,5,6,7,8,9,10,11,12"));
 }

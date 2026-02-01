@@ -1,5 +1,6 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
 using CalculatorChallenge.Application.Services;
+using CalculatorChallenge.Domain.Exceptions;
 
 namespace CalculatorChallenge.ApplicationTests;
 
@@ -22,7 +23,7 @@ public class CalculatorServiceTests
     [Theory]
     [InlineData("20", 20)]
     [InlineData("1,5000", 5001)]
-    [InlineData("4,-3", 1)]
+    [InlineData("4,3", 7)]
     public void WhenNoErrors_ShouldCalculate(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input));
 
     [Fact]
@@ -32,4 +33,12 @@ public class CalculatorServiceTests
     [Fact]
     public void WhenNewLineAsSeparator_ShouldCalculate()
        => Assert.Equal(6, _calculatorService.Calculate(@"1\n2,3"));
+
+    [Fact]
+    public void WhenNegativesNumber_ShouldThrowExceptionWithNegatives()
+    {
+        var ex = Assert.Throws<NegativeNumbersNotAllowedException>(() => _calculatorService.Calculate("1,-2,-3,4"));
+        Assert.Contains("-2", ex.Message);
+        Assert.Contains("-3", ex.Message);
+    }
 }

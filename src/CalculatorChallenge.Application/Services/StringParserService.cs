@@ -1,5 +1,4 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
-using CalculatorChallenge.Domain;
 using System.Text.RegularExpressions;
 
 namespace CalculatorChallenge.Application.Services

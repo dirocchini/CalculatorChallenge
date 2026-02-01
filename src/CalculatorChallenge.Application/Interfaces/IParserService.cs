@@ -1,6 +1,4 @@
-﻿using CalculatorChallenge.Domain;
-
-namespace CalculatorChallenge.Application.Interfaces;
+﻿namespace CalculatorChallenge.Application.Interfaces;
 
 public interface IParserService
 {

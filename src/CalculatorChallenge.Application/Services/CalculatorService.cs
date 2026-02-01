@@ -1,4 +1,5 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
+using CalculatorChallenge.Domain.Exceptions;
 using System.Data;
 
 namespace CalculatorChallenge.Application.Services;
@@ -10,9 +11,15 @@ public sealed class CalculatorService(IParserService parserService) : ICalculato
         if (string.IsNullOrEmpty(expression))
             return 0;
 
-        var values = parserService.Parse(expression);
+        var parsedValues = parserService.Parse(expression);
 
-        return values.Select(ParseInt).Sum();
+        var numbers = parsedValues.Select(ParseInt);
+        
+        var negatives = numbers.Where(n => n < 0).ToArray();
+        if (negatives.Length > 0)
+            throw new NegativeNumbersNotAllowedException(negatives);
+
+        return numbers.Sum();
     }
     private static int ParseInt(string? value) => int.TryParse(value, out var result) ? result : 0;
 }

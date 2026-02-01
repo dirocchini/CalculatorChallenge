@@ -1,10 +1,19 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
+using CalculatorChallenge.Application.Options;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 
 namespace CalculatorChallenge.Application.Services
 {
     public sealed class StringParserService : IParserService
     {
+        private readonly ParserOptions _options;
+
+        public StringParserService(IOptions<ParserOptions> options)
+        {
+            _options = options.Value;
+        }
+
         public List<string> Parse(string? input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -17,9 +26,9 @@ namespace CalculatorChallenge.Application.Services
             return parsedInput;
         }
 
-        private static (List<string> delimiters, string body) ExtractDelimiters(string input)
+        private (List<string> delimiters, string body) ExtractDelimiters(string input)
         {
-            var delimiters = new List<string> { ",", @"\n" };
+            var delimiters = new List<string> { ",", _options.AlternateDelimiter };
 
             if (!input.StartsWith("//"))
                 return (delimiters, input);

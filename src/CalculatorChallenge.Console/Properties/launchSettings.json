@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CalculatorChallenge.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "--alt-delimiter=;"
+    }
+  }
+}

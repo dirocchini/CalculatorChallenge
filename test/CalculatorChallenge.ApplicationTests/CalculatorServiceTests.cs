@@ -1,12 +1,27 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
+using CalculatorChallenge.Application.Options;
 using CalculatorChallenge.Application.Services;
 using CalculatorChallenge.Domain.Exceptions;
+using Microsoft.Extensions.Options;
 
 namespace CalculatorChallenge.ApplicationTests;
 
 public class CalculatorServiceTests
 {
-    private readonly ICalculatorService _calculatorService = new CalculatorService(new StringParserService());
+    private readonly ICalculatorService _calculatorService;
+
+    public CalculatorServiceTests()
+    {
+        var options = Options.Create(new ParserOptions
+        {
+            AlternateDelimiter = @"\n",
+            MaxValue = 1000,
+            AllowNegatives = false
+        });
+
+        var parser = new StringParserService(options);
+        _calculatorService = new CalculatorService(parser, options);
+    }
 
     [Theory]
     [InlineData(null, 0)]
@@ -64,4 +79,70 @@ public class CalculatorServiceTests
     [InlineData("1,1000", "1+1000")]
     [InlineData("4,3,1001,2", "4+3+0+2")]
     public void WhenCalulate_ShouldDisplayCorrectFormula(string? input, string expected) => Assert.Equal(expected, _calculatorService.Calculate(input).Formula);
+
+    [Fact]
+    public void WhenCustomAlternateDelimiter_ShouldBeRespected()
+    {
+        // Arrange
+        var options = Options.Create(new ParserOptions
+        {
+            AlternateDelimiter = ";",
+            MaxValue = 1000,
+            AllowNegatives = false
+        });
+
+        var parser = new StringParserService(options);
+        var calculator = new CalculatorService(parser, options);
+
+        // Act
+        var result = calculator.Calculate("1;2,3");
+
+        // Assert
+        Assert.Equal("1+2+3", result.Formula);
+        Assert.Equal(6, result.Result);
+    }
+
+    [Fact]
+    public void WhenCustomMaxValue_ShouldBeRespected()
+    {
+        // Arrange
+        var options = Options.Create(new ParserOptions
+        {
+            AlternateDelimiter = ";",
+            MaxValue = 500,
+            AllowNegatives = false
+        });
+
+        var parser = new StringParserService(options);
+        var calculator = new CalculatorService(parser, options);
+
+        // Act
+        var result = calculator.Calculate("1;501,3");
+
+        // Assert
+        Assert.Equal("1+0+3", result.Formula);
+        Assert.Equal(4, result.Result);
+    }
+
+    [Fact]
+    public void WhenCustomNegativeNumbersFlagValue_ShouldBeRespected()
+    {
+        // Arrange
+        var options = Options.Create(new ParserOptions
+        {
+            AlternateDelimiter = ";",
+            MaxValue = 500,
+            AllowNegatives = true
+        });
+
+        var parser = new StringParserService(options);
+        var calculator = new CalculatorService(parser, options);
+
+        // Act
+        var result = calculator.Calculate("2;-1,3");
+
+        // Assert
+        Assert.Equal("2+-1+3", result.Formula);
+        Assert.Equal(4, result.Result);
+    }
 }

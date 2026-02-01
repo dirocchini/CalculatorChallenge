@@ -8,6 +8,7 @@ using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         services.AddSingleton<ICalculatorService, CalculatorService>();
+        services.AddSingleton<IParserService, StringParserService>();
     })
     .Build();
 
@@ -18,5 +19,14 @@ while (true)
 {
     Console.Write("> ");
     var line = Console.ReadLine();
-    Console.WriteLine(calc.Calculate(line));
+
+    try
+    {
+        var result = calc.Calculate(line);
+        Console.WriteLine(result);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"ERROR: {ex.Message}");
+    }
 }

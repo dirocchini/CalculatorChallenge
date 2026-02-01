@@ -1,12 +1,11 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
 using CalculatorChallenge.Application.Services;
-using CalculatorChallenge.Domain.Exceptions;
 
 namespace CalculatorChallenge.ApplicationTests;
 
 public class CalculatorServiceTests
 {
-    private readonly ICalculatorService _calculatorService = new CalculatorService();
+    private readonly ICalculatorService _calculatorService = new CalculatorService(new StringParserService());
 
     [Theory]
     [InlineData(null, 0)]
@@ -29,4 +28,8 @@ public class CalculatorServiceTests
     [Fact]
     public void WhenManyNumbers_ShouldCalculate()
        => Assert.Equal(78, _calculatorService.Calculate("1,2,3,4,5,6,7,8,9,10,11,12"));
+
+    [Fact]
+    public void WhenNewLineAsSeparator_ShouldCalculate()
+       => Assert.Equal(6, _calculatorService.Calculate(@"1\n2,3"));
 }

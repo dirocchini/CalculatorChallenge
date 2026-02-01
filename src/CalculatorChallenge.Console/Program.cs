@@ -23,7 +23,8 @@ while (true)
     try
     {
         var result = calc.Calculate(line);
-        Console.WriteLine(result);
+        Console.WriteLine("Result: " + result.Result);
+        Console.WriteLine("Formula: " + result.Formula);
     }
     catch (Exception ex)
     {

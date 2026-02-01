@@ -1,6 +1,8 @@
-﻿namespace CalculatorChallenge.Application.Interfaces;
+﻿using CalculatorChallenge.Domain;
+
+namespace CalculatorChallenge.Application.Interfaces;
 
 public interface ICalculatorService
 {
-    int Calculate(string expression);
+    CalculationResult Calculate(string expression);
 }

@@ -32,10 +32,15 @@ namespace CalculatorChallenge.Application.Services
             var header = input.Substring(2, newlineIndex - 2);
             var body = input[(newlineIndex + 2)..];
 
-            if (header.StartsWith("[") && header.EndsWith("]"))
+            if (header.StartsWith("["))
             {
-                var inner = header[1..^1];
-                delimiters.Add(inner);
+                var matches = Regex.Matches(header, @"\[(.*?)\]");
+                foreach (Match m in matches)
+                {
+                    var d = m.Groups[1].Value;
+                    if (!string.IsNullOrEmpty(d))
+                        delimiters.Add(d);
+                }
                 return (delimiters, body);
             }
 

@@ -54,4 +54,8 @@ public class CalculatorServiceTests
     [Fact]
     public void WhenOneCustomHeader_ShouldCalculate()
       => Assert.Equal(66, _calculatorService.Calculate(@"//[***]\n11***22***33"));
+
+    [Fact]
+    public void WhenMultipleCustomHeader_ShouldCalculate()
+        => Assert.Equal(110, _calculatorService.Calculate(@"//[*][!!][r9r]\n11r9r22*hh*33!!44"));
 }

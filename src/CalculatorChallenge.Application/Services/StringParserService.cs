@@ -1,4 +1,5 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
+using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 
 namespace CalculatorChallenge.Application.Services
@@ -10,24 +11,41 @@ namespace CalculatorChallenge.Application.Services
             if (string.IsNullOrWhiteSpace(input))
                 return ["0"];
 
-            var allDelimiters = new List<string> { ",", @"\n" };
+            var (delimiters, body) = ExtractDelimiters(input);
 
-            if (input.StartsWith("//"))
-            {
-                var delimiterEndIndex = input.IndexOf(@"\n");
-                if (delimiterEndIndex != -1)
-                {
-                    var delimiterSection = input[2..delimiterEndIndex];
-
-                    allDelimiters.Add(delimiterSection);
-                  
-                    //input = input[(delimiterEndIndex + 1)..];
-                }
-            }
-
-            var parsedInput = SplitByDelimiters(input, allDelimiters);
+            var parsedInput = SplitByDelimiters(input, delimiters);
 
             return parsedInput;
+        }
+
+        private static (List<string> delimiters, string body) ExtractDelimiters(string input)
+        {
+            var delimiters = new List<string> { ",", @"\n" };
+
+            if (!input.StartsWith("//"))
+                return (delimiters, input);
+
+            var newlineIndex = input.IndexOf(@"\n");
+            if (newlineIndex < 0)
+                return (delimiters, input);
+
+            var header = input.Substring(2, newlineIndex - 2);
+            var body = input[(newlineIndex + 2)..];
+
+            if (header.StartsWith("[") && header.EndsWith("]"))
+            {
+                var inner = header[1..^1];
+                delimiters.Add(inner);
+                return (delimiters, body);
+            }
+
+            if (header.Length == 1)
+            {
+                delimiters.Add(header);
+                return (delimiters, body);
+            }
+
+            return (delimiters, input);
         }
 
         private static List<string> SplitByDelimiters(string input, List<string> delimiters)

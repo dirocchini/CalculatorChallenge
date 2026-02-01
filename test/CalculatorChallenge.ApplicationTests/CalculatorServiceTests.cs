@@ -45,4 +45,9 @@ public class CalculatorServiceTests
     [Fact]
     public void WhenNumberGreaterThan1000LShouldIgnoreGreaterValuesThan1000()
         => Assert.Equal(8, _calculatorService.Calculate(@"2,1001,6"));
+
+    [Theory]
+    [InlineData(@"//#\n2#5", 7)]
+    [InlineData(@"//,\n2,ff,100", 102)]
+    public void WhenCustomDelimiter_ShouldCalculate(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input));
 }

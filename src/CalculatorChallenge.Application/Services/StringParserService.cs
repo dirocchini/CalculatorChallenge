@@ -12,6 +12,19 @@ namespace CalculatorChallenge.Application.Services
 
             var allDelimiters = new List<string> { ",", @"\n" };
 
+            if (input.StartsWith("//"))
+            {
+                var delimiterEndIndex = input.IndexOf(@"\n");
+                if (delimiterEndIndex != -1)
+                {
+                    var delimiterSection = input[2..delimiterEndIndex];
+
+                    allDelimiters.Add(delimiterSection);
+                  
+                    //input = input[(delimiterEndIndex + 1)..];
+                }
+            }
+
             var parsedInput = SplitByDelimiters(input, allDelimiters);
 
             return parsedInput;

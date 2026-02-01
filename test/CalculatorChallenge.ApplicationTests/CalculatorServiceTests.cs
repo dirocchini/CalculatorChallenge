@@ -22,7 +22,7 @@ public class CalculatorServiceTests
 
     [Theory]
     [InlineData("20", 20)]
-    [InlineData("1,5000", 5001)]
+    [InlineData("1,1000", 1001)]
     [InlineData("4,3", 7)]
     public void WhenNoErrors_ShouldCalculate(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input));
 
@@ -41,4 +41,8 @@ public class CalculatorServiceTests
         Assert.Contains("-2", ex.Message);
         Assert.Contains("-3", ex.Message);
     }
+
+    [Fact]
+    public void WhenNumberGreaterThan1000LShouldIgnoreGreaterValuesThan1000()
+        => Assert.Equal(8, _calculatorService.Calculate(@"2,1001,6"));
 }

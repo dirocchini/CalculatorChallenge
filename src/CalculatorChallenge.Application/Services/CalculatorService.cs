@@ -13,7 +13,9 @@ public sealed class CalculatorService(IParserService parserService) : ICalculato
 
         var parsedValues = parserService.Parse(expression);
 
-        var numbers = parsedValues.Select(ParseInt);
+        var numbers = parsedValues
+            .Select(ParseInt)
+            .Where(n => n <= 1000);
         
         var negatives = numbers.Where(n => n < 0).ToArray();
         if (negatives.Length > 0)

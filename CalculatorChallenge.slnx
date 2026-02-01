@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/01 Presentation/">
+    <Project Path="src/CalculatorChallenge.Console/CalculatorChallenge.Console.csproj" Id="8e18fce9-80d9-42a1-b479-c1f9ac88774b" />
+  </Folder>
+  <Folder Name="/02 Application/">
+    <Project Path="src/CalculatorChallenge.Application/CalculatorChallenge.Application.csproj" />
+  </Folder>
+  <Folder Name="/03 Domain/">
+    <Project Path="src/CalculatorChallenge.Domain/CalculatorChallenge.Domain.csproj" />
+  </Folder>
+  <Folder Name="/04 Tests/" />
+  <Folder Name="/04 Tests/Application/">
+    <Project Path="test/CalculatorChallenge.ApplicationTests/CalculatorChallenge.ApplicationTests.csproj" />
+  </Folder>
+</Solution>

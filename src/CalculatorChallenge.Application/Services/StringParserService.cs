@@ -21,7 +21,7 @@ namespace CalculatorChallenge.Application.Services
 
             var (delimiters, body) = ExtractDelimiters(input);
 
-            var parsedInput = SplitByDelimiters(input, delimiters);
+            var parsedInput = SplitByDelimiters(body, delimiters);
 
             return parsedInput;
         }

@@ -1,4 +1,5 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
+using CalculatorChallenge.Application.Operations;
 using CalculatorChallenge.Application.Options;
 using CalculatorChallenge.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,10 +30,20 @@ using var host = Host.CreateDefaultBuilder(args)
             var allowNegatives = GetArg(args, "--allow-negatives");
             if (bool.TryParse(allowNegatives, out var parsedAllow))
                 options.AllowNegatives = parsedAllow;
+
+            var op = GetArg(args, "--op"); 
+            if (!string.IsNullOrWhiteSpace(op))
+                options.Operation = op;
         });
 
         services.AddSingleton<ICalculatorService, CalculatorService>();
         services.AddSingleton<IParserService, StringParserService>();
+
+        services.AddSingleton<IOperationStrategy, AdditionOperation>();
+        services.AddSingleton<IOperationStrategy, SubtractionStrategy>();
+        services.AddSingleton<IOperationStrategy, DivisionOperation>();
+        services.AddSingleton<IOperationStrategy, MultiplicationOperation>();
+        
     })
     .Build();
 

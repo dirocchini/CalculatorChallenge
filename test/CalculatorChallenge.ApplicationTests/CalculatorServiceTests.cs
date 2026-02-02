@@ -1,103 +1,145 @@
 ﻿using CalculatorChallenge.Application.Interfaces;
+using CalculatorChallenge.Application.Operations;
 using CalculatorChallenge.Application.Options;
 using CalculatorChallenge.Application.Services;
 using CalculatorChallenge.Domain.Exceptions;
 using Microsoft.Extensions.Options;
+using Xunit;
 
 namespace CalculatorChallenge.ApplicationTests;
 
-public class CalculatorServiceTests
+public sealed class CalculatorServiceTests
 {
-    private readonly ICalculatorService _calculatorService;
-
-    public CalculatorServiceTests()
+    private static ICalculatorService CreateSut(
+        string operation = "add",
+        string altDelimiter = @"\n",
+        int maxValue = 1000,
+        bool allowNegatives = false)
     {
         var options = Options.Create(new ParserOptions
         {
-            AlternateDelimiter = @"\n",
-            MaxValue = 1000,
-            AllowNegatives = false
+            Operation = operation,
+            AlternateDelimiter = altDelimiter,
+            MaxValue = maxValue,
+            AllowNegatives = allowNegatives
         });
 
-        var parser = new StringParserService(options);
-        _calculatorService = new CalculatorService(parser, options);
+        IParserService parser = new StringParserService(options);
+
+        var strategies = new IOperationStrategy[]
+        {
+            new AdditionOperation(),
+            new SubtractionStrategy(),
+            new MultiplicationOperation(),
+            new DivisionOperation()
+        };
+
+        return new CalculatorService(parser, options, strategies);
     }
 
     [Theory]
     [InlineData(null, 0)]
     [InlineData("", 0)]
     [InlineData(" ", 0)]
-    public void WhenEmptyValue_ShouldConvertToZero(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input).Result);
+    public void WhenEmptyValue_ShouldConvertToZero(string? input, int expected)
+    {
+        var sut = CreateSut();
+        Assert.Equal(expected, sut.Calculate(input).Result);
+        Assert.Equal("0", sut.Calculate(input).Formula);
+    }
 
     [Theory]
     [InlineData("15", 15)]
     [InlineData("5,tytyt", 5)]
     [InlineData("7,", 7)]
-    public void WhenMissingOrInvalidValues_ShouldConvertToZero(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input).Result);
+    public void WhenMissingOrInvalidValues_ShouldConvertToZero(string input, int expected)
+    {
+        var sut = CreateSut();
+        Assert.Equal(expected, sut.Calculate(input).Result);
+    }
 
     [Theory]
     [InlineData("20", 20)]
     [InlineData("1,1000", 1001)]
     [InlineData("4,3", 7)]
-    public void WhenNoErrors_ShouldCalculate(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input).Result);
+    public void WhenNoErrors_ShouldCalculate(string input, int expected)
+    {
+        var sut = CreateSut();
+        Assert.Equal(expected, sut.Calculate(input).Result);
+    }
 
     [Fact]
     public void WhenManyNumbers_ShouldCalculate()
-       => Assert.Equal(78, _calculatorService.Calculate("1,2,3,4,5,6,7,8,9,10,11,12").Result);
+    {
+        var sut = CreateSut();
+        Assert.Equal(78, sut.Calculate("1,2,3,4,5,6,7,8,9,10,11,12").Result);
+    }
 
     [Fact]
     public void WhenNewLineAsSeparator_ShouldCalculate()
-       => Assert.Equal(6, _calculatorService.Calculate(@"1\n2,3").Result);
+    {
+        var sut = CreateSut();
+        Assert.Equal(6, sut.Calculate(@"1\n2,3").Result);
+    }
 
     [Fact]
     public void WhenNegativesNumber_ShouldThrowExceptionWithNegatives()
     {
-        var ex = Assert.Throws<NegativeNumbersNotAllowedException>(() => _calculatorService.Calculate("1,-2,-3,4"));
+        var sut = CreateSut(allowNegatives: false);
+
+        var ex = Assert.Throws<NegativeNumbersNotAllowedException>(() => sut.Calculate("1,-2,-3,4"));
         Assert.Contains("-2", ex.Message);
         Assert.Contains("-3", ex.Message);
     }
 
     [Fact]
-    public void WhenNumberGreaterThan1000L_ShouldIgnoreGreaterValuesThan1000()
-        => Assert.Equal(8, _calculatorService.Calculate(@"2,1001,6").Result);
+    public void WhenNumberGreaterThanMaxValue_ShouldIgnoreGreaterValues()
+    {
+        var sut = CreateSut(maxValue: 1000);
+        Assert.Equal(8, sut.Calculate("2,1001,6").Result);
+        Assert.Equal("2+0+6", sut.Calculate("2,1001,6").Formula);
+    }
 
     [Theory]
     [InlineData(@"//#\n2#5", 7)]
     [InlineData(@"//,\n2,ff,100", 102)]
-    public void WhenCustomDelimiter_ShouldCalculate(string? input, int expected) => Assert.Equal(expected, _calculatorService.Calculate(input).Result);
+    public void WhenCustomDelimiter_ShouldCalculate(string input, int expected)
+    {
+        var sut = CreateSut();
+        Assert.Equal(expected, sut.Calculate(input).Result);
+    }
 
     [Fact]
     public void WhenOneCustomHeader_ShouldCalculate()
-      => Assert.Equal(66, _calculatorService.Calculate(@"//[***]\n11***22***33").Result);
+    {
+        var sut = CreateSut();
+        Assert.Equal(66, sut.Calculate(@"//[***]\n11***22***33").Result);
+    }
 
     [Fact]
     public void WhenMultipleCustomHeader_ShouldCalculate()
-        => Assert.Equal(110, _calculatorService.Calculate(@"//[*][!!][r9r]\n11r9r22*hh*33!!44").Result);
+    {
+        var sut = CreateSut();
+        Assert.Equal(110, sut.Calculate(@"//[*][!!][r9r]\n11r9r22*hh*33!!44").Result);
+    }
 
     [Theory]
     [InlineData("20", "20")]
     [InlineData("1,1000", "1+1000")]
     [InlineData("4,3,1001,2", "4+3+0+2")]
-    public void WhenCalulate_ShouldDisplayCorrectFormula(string? input, string expected) => Assert.Equal(expected, _calculatorService.Calculate(input).Formula);
+    public void WhenCalculate_ShouldDisplayCorrectFormula(string input, string expected)
+    {
+        var sut = CreateSut("add");
+        Assert.Equal(expected, sut.Calculate(input).Formula);
+    }
 
     [Fact]
     public void WhenCustomAlternateDelimiter_ShouldBeRespected()
     {
-        // Arrange
-        var options = Options.Create(new ParserOptions
-        {
-            AlternateDelimiter = ";",
-            MaxValue = 1000,
-            AllowNegatives = false
-        });
+        var sut = CreateSut(operation: "add", altDelimiter: ";", maxValue: 1000, allowNegatives: false);
 
-        var parser = new StringParserService(options);
-        var calculator = new CalculatorService(parser, options);
+        var result = sut.Calculate("1;2,3");
 
-        // Act
-        var result = calculator.Calculate("1;2,3");
-
-        // Assert
         Assert.Equal("1+2+3", result.Formula);
         Assert.Equal(6, result.Result);
     }
@@ -105,21 +147,10 @@ public class CalculatorServiceTests
     [Fact]
     public void WhenCustomMaxValue_ShouldBeRespected()
     {
-        // Arrange
-        var options = Options.Create(new ParserOptions
-        {
-            AlternateDelimiter = ";",
-            MaxValue = 500,
-            AllowNegatives = false
-        });
+        var sut = CreateSut(operation: "add", altDelimiter: ";", maxValue: 500, allowNegatives: false);
 
-        var parser = new StringParserService(options);
-        var calculator = new CalculatorService(parser, options);
+        var result = sut.Calculate("1;501,3");
 
-        // Act
-        var result = calculator.Calculate("1;501,3");
-
-        // Assert
         Assert.Equal("1+0+3", result.Formula);
         Assert.Equal(4, result.Result);
     }
@@ -127,22 +158,78 @@ public class CalculatorServiceTests
     [Fact]
     public void WhenCustomNegativeNumbersFlagValue_ShouldBeRespected()
     {
-        // Arrange
-        var options = Options.Create(new ParserOptions
-        {
-            AlternateDelimiter = ";",
-            MaxValue = 500,
-            AllowNegatives = true
-        });
+        var sut = CreateSut(operation: "add", altDelimiter: ";", maxValue: 500, allowNegatives: true);
 
-        var parser = new StringParserService(options);
-        var calculator = new CalculatorService(parser, options);
+        var result = sut.Calculate("2;-1,3");
 
-        // Act
-        var result = calculator.Calculate("2;-1,3");
-
-        // Assert
         Assert.Equal("2+-1+3", result.Formula);
         Assert.Equal(4, result.Result);
+    }
+
+    [Fact]
+    public void WhenAddOperation_ShouldUsePlusInFormula()
+    {
+        var sut = CreateSut("add");
+        var result = sut.Calculate("10,3,2");
+
+        Assert.Equal("10+3+2", result.Formula);
+        Assert.Equal(15, result.Result);
+    }
+
+    [Fact]
+    public void WhenSubOperation_ShouldUseMinusInFormula()
+    {
+        var sut = CreateSut("sub");
+        var result = sut.Calculate("10,3,2");
+
+        Assert.Equal("10-3-2", result.Formula);
+        Assert.Equal(5, result.Result);
+    }
+
+    [Fact]
+    public void WhenMulOperation_ShouldUseAsteriskInFormula()
+    {
+        var sut = CreateSut("mul");
+        var result = sut.Calculate("2,3,4");
+
+        Assert.Equal("2*3*4", result.Formula);
+        Assert.Equal(24, result.Result);
+    }
+
+    [Fact]
+    public void WhenDivOperation_ShouldUseSlashInFormula()
+    {
+        var sut = CreateSut("div");
+        var result = sut.Calculate("20,2,2");
+
+        Assert.Equal("20/2/2", result.Formula);
+        Assert.Equal(5, result.Result);
+    }
+
+    [Fact]
+    public void WhenDivOperationWithDecimalResult_ShouldUseSlashInFormula()
+    {
+        var sut = CreateSut("div");
+        var result = sut.Calculate("5,4,2");
+
+        Assert.Equal("5/4/2", result.Formula);
+        Assert.Equal(0.625m, result.Result);
+    }
+
+    [Fact]
+    public void WhenDivOperationWithNegativeDecimalResult_ShouldUseSlashInFormula()
+    {
+        var sut = CreateSut(operation: "div", allowNegatives: true);
+        var result = sut.Calculate("5,4,-2");
+
+        Assert.Equal("5/4/-2", result.Formula);
+        Assert.Equal(-0.625m, result.Result);
+    }
+
+    [Fact]
+    public void WhenDivOperationByZero_ShouldThrowException()
+    {
+        var sut = CreateSut("div");
+        Assert.Throws<DivideByZeroException>(() => sut.Calculate("10,0,2"));
     }
 }

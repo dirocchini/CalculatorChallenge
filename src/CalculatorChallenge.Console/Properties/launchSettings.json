@@ -2,7 +2,7 @@
   "profiles": {
     "CalculatorChallenge.Console": {
       "commandName": "Project",
-      "commandLineArgs": "--alt-delimiter=;"
+      "commandLineArgs": "--alt-delimiter=, --max-value=1000 --allow-negatives=true --op=div"
     }
   }
 }

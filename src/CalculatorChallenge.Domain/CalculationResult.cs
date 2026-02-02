@@ -2,6 +2,6 @@
 
 public sealed class CalculationResult
 {
-    public int Result { get; init; }
+    public decimal Result { get; init; }
     public string Formula { get; init; } = string.Empty;
 }

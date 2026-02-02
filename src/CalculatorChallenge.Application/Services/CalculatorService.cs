@@ -7,9 +7,15 @@ using System.Data;
 
 namespace CalculatorChallenge.Application.Services;
 
-public sealed class CalculatorService(IParserService parserService, IOptions<ParserOptions> options) : ICalculatorService
+public sealed class CalculatorService(
+    IParserService parserService, 
+    IOptions<ParserOptions> options,
+    IEnumerable<IOperationStrategy> strategies) : ICalculatorService
 {
     private readonly ParserOptions _options = options.Value;
+
+    private readonly Dictionary<string, IOperationStrategy> _strategies =
+        strategies.ToDictionary(s => s.Key, StringComparer.OrdinalIgnoreCase);
 
     public CalculationResult Calculate(string expression)
     {
@@ -25,7 +31,8 @@ public sealed class CalculatorService(IParserService parserService, IOptions<Par
 
         var numbers = parsedValues
             .Select(ParseInt)
-            .Select(n => n <= _options.MaxValue ? n : 0);
+            .Select(n => n <= _options.MaxValue ? n : 0)
+            .ToList();
 
         if (!_options.AllowNegatives)
         {
@@ -34,8 +41,10 @@ public sealed class CalculatorService(IParserService parserService, IOptions<Par
                 throw new NegativeNumbersNotAllowedException(negatives);
         }
 
-        var formula = string.Join("+", numbers);
-        var result = numbers.Sum();
+        var op = ResolveOperation(_options.Operation);
+        var result = op.Apply(numbers);
+
+        var formula = string.Join(op.Symbol, numbers);
 
         return new CalculationResult
         {
@@ -43,5 +52,15 @@ public sealed class CalculatorService(IParserService parserService, IOptions<Par
             Formula = formula
         };
     }
+
     private static int ParseInt(string? value) => int.TryParse(value, out var result) ? result : 0;
+
+    private IOperationStrategy ResolveOperation(string? key)
+    {
+        key ??= "add";
+        if (_strategies.TryGetValue(key, out var strategy))
+            return strategy;
+
+        throw new ArgumentException($"Unsupported operation: '{key}'. Use add|sub|mul|div.");
+    }
 }

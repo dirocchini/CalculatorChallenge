@@ -7,6 +7,6 @@ public sealed class NegativeNumbersNotAllowedException : Exception
     public NegativeNumbersNotAllowedException(IEnumerable<int> negatives)
         : base($"Negatives not allowed: {string.Join(",", negatives)}")
     {
-        Negatives = negatives.ToArray();
+        Negatives = [.. negatives];
     }
 }

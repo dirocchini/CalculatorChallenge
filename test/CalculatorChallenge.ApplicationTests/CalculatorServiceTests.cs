@@ -4,7 +4,6 @@ using CalculatorChallenge.Application.Options;
 using CalculatorChallenge.Application.Services;
 using CalculatorChallenge.Domain.Exceptions;
 using Microsoft.Extensions.Options;
-using Xunit;
 
 namespace CalculatorChallenge.ApplicationTests;
 
